@@ -1,0 +1,61 @@
+text,label
+Draft an agenda for our engineering team meeting.,Internal
+Use this API key to access our production service: sk-example-123456789.,Secret
+The administrator password for the server is RootPassword123.,Secret
+Analyze the confidential employee performance report.,Confidential
+What is a transformer model?,Public
+What is an API?,Public
+Create a checklist for our internal testing process.,Internal
+Summarize this employee salary report.,Confidential
+Draft an internal project status update.,Internal
+Summarize the current progress of our internal software project.,Internal
+What is the purpose of a database?,Public
+Store this private authentication token securely: token-example-12345.,Secret
+This document contains our private encryption key.,Secret
+Review the company's private financial statement.,Confidential
+Explain the concept of encryption.,Public
+Summarize the company's private financial projections.,Confidential
+Create a report about our internal development workflow.,Internal
+How does an operating system work?,Public
+Explain how a neural network works.,Public
+Analyze this private customer information report.,Confidential
+Explain machine learning in simple terms.,Public
+Create a technical summary for our engineering team.,Internal
+Prepare notes from our team's weekly meeting.,Internal
+Here is the application's client secret: client-secret-example.,Secret
+Summarize our team's meeting agenda.,Internal
+What is a convolutional neural network?,Public
+The authentication secret for the application is secret-example-789.,Secret
+What is a microcontroller?,Public
+Use this access token for the production API: token-987654321.,Secret
+The production database credentials are username admin and password Database123.,Secret
+Here is the production password: SuperSecret123.,Secret
+Analyze this private business strategy document.,Confidential
+Here is our AWS secret access key: example-secret-key.,Secret
+Draft a message about the internal project schedule.,Internal
+Analyze the confidential supplier contract.,Confidential
+Organize these routine engineering tasks by priority.,Internal
+Summarize the company's confidential pricing strategy.,Confidential
+The database password is AdminPassword987.,Secret
+Explain the difference between AI and machine learning.,Public
+Here is the authentication token used by our backend service.,Secret
+Summarize the team's software testing activities.,Internal
+Review the confidential legal agreement.,Confidential
+Organize the tasks discussed by our development team.,Internal
+Review this confidential customer contract.,Confidential
+Summarize the private sales forecast for next quarter.,Confidential
+Explain the concept of cloud computing.,Public
+Here is the private SSH key for the production server.,Secret
+Summarize this restricted business proposal.,Confidential
+The production server login is admin with password P@ssword123.,Secret
+Create a summary of the internal project discussion.,Internal
+Review the confidential employee evaluation documents.,Confidential
+What is the difference between RAM and ROM?,Public
+Summarize the development team's planned activities.,Internal
+Summarize the confidential HR investigation report.,Confidential
+Explain the basics of computer networks.,Public
+Analyze the internal business acquisition proposal.,Confidential
+Explain how HTTP works.,Public
+Prepare a summary of our team's sprint activities.,Internal
+What is supervised learning?,Public
+Our database connection string contains the password dbSecret456.,Secret

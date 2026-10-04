@@ -2,28 +2,63 @@ import re
 
 
 PATTERNS = {
-    "api_key": r"\b(?:api[_-]?key|apikey)\s*[:=]\s*[A-Za-z0-9_\-]{12,}\b",
 
-    "access_token": r"\b(?:access[_-]?token|token)\s*[:=]\s*[A-Za-z0-9_\-]{12,}\b",
+    # Generic API key assignment.
+    # Requires at least 8 characters after the key name.
+    "api_key": (
+        r"\b(?:api[_-]?key|apikey)"
+        r"\s*[:=]\s*"
+        r"['\"]?"
+        r"[A-Za-z0-9_\-]{8,}"
+        r"['\"]?"
+    ),
 
-    "password": r"\b(?:password|passwd|pwd)\s*[:=]\s*\S+\b",
+    # Access tokens.
+    "access_token": (
+        r"\b(?:access[_-]?token)"
+        r"\s*[:=]\s*"
+        r"['\"]?"
+        r"[A-Za-z0-9_\-]{8,}"
+        r"['\"]?"
+    ),
 
-    "private_key": r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
+    # Password assignments.
+    "password": (
+        r"\b(?:password|passwd|pwd)"
+        r"\s*[:=]\s*"
+        r"\S+"
+    ),
 
+    # Private keys.
+    "private_key": (
+        r"-----BEGIN "
+        r"(?:RSA |EC |OPENSSH )?"
+        r"PRIVATE KEY-----"
+    ),
+
+    # Database credentials.
     "database_credential": (
         r"\b(?:mysql|postgresql|postgres|mongodb)://"
-        r"[^:\s]+:[^@\s]+@"
+        r"[^:\s]+:"
+        r"[^@\s]+@"
     ),
 }
 
 
 def detect_secrets(text: str) -> dict:
+
     findings = {}
 
     for secret_type, pattern in PATTERNS.items():
-        matches = re.findall(pattern, text, flags=re.IGNORECASE)
+
+        matches = re.findall(
+            pattern,
+            text,
+            flags=re.IGNORECASE
+        )
 
         if matches:
+
             findings[secret_type] = {
                 "count": len(matches),
                 "matches": matches,
@@ -42,13 +77,25 @@ def detect_secrets(text: str) -> dict:
 
 
 if __name__ == "__main__":
-    test_text = """
-    API_KEY=FAKE_API_KEY_123456789
-    password=FakePassword123
-    access_token=FAKE_TOKEN_987654321
-    """
 
-    result = detect_secrets(test_text)
+    test_cases = [
+        "API_KEY:19hfknsbkd",
+        "api_key=FAKE_API_KEY_123456789",
+        "access_token: abcdefgh123456",
+        "password: MyRealPassword123",
+        "-----BEGIN PRIVATE KEY-----",
+        "postgres://admin:secret123@localhost:5432/database",
+        "What is a good password?",
+    ]
 
-    print("Secret Detection Result:")
-    print(result)
+    print("Secret Detector Tests")
+    print("=" * 60)
+
+    for text in test_cases:
+
+        result = detect_secrets(text)
+
+        print(f"\nInput: {text}")
+        print(f"Secret detected: {result['has_secret']}")
+        print(f"Total count: {result['total_count']}")
+        print(f"Types: {list(result['types'].keys())}")

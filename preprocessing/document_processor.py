@@ -8,12 +8,44 @@ from openpyxl import load_workbook
 
 
 # ---------------------------------------------------------
+# Tesseract configuration
+# ---------------------------------------------------------
+
+TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+if Path(TESSERACT_PATH).exists():
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+
+
+# ---------------------------------------------------------
 # TXT
 # ---------------------------------------------------------
 
 def extract_from_txt(file_path: str) -> str:
     path = Path(file_path)
     return path.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------
+# IMAGE OCR
+# ---------------------------------------------------------
+
+def extract_from_image(file_path: str) -> str:
+    """
+    Extract text from PNG/JPG/JPEG using Tesseract OCR.
+    """
+
+    image = Image.open(file_path)
+
+    try:
+        text = pytesseract.image_to_string(
+            image,
+            lang="eng",
+        )
+    finally:
+        image.close()
+
+    return text.strip()
 
 
 # ---------------------------------------------------------
@@ -25,9 +57,12 @@ def ocr_pdf_page(page) -> str:
     Convert a PDF page into an image and run OCR.
     """
 
-    # Render PDF page at higher resolution for better OCR
     matrix = pymupdf.Matrix(2, 2)
-    pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+
+    pixmap = page.get_pixmap(
+        matrix=matrix,
+        alpha=False,
+    )
 
     image = Image.frombytes(
         "RGB",
@@ -35,7 +70,13 @@ def ocr_pdf_page(page) -> str:
         pixmap.samples,
     )
 
-    text = pytesseract.image_to_string(image)
+    try:
+        text = pytesseract.image_to_string(
+            image,
+            lang="eng",
+        )
+    finally:
+        image.close()
 
     return text.strip()
 
@@ -46,15 +87,10 @@ def ocr_pdf_page(page) -> str:
 
 def extract_from_pdf(file_path: str) -> tuple[str, bool, list[int]]:
     """
-    Extract text from a PDF.
+    Extract text from PDF.
 
     If a page contains little/no selectable text,
-    OCR is automatically used for that page.
-
-    Returns:
-        text
-        ocr_used
-        ocr_pages
+    automatically use OCR.
     """
 
     document = pymupdf.open(file_path)
@@ -62,23 +98,33 @@ def extract_from_pdf(file_path: str) -> tuple[str, bool, list[int]]:
     pages = []
     ocr_pages = []
 
-    for page_number, page in enumerate(document, start=1):
+    try:
+        for page_number, page in enumerate(
+            document,
+            start=1,
+        ):
 
-        # First try normal PDF text extraction
-        text = page.get_text("text").strip()
+            # Try normal PDF text extraction first
+            text = page.get_text("text").strip()
 
-        # If the page has little/no text, use OCR
-        if len(text) < 30:
-            print(f"  OCR processing page {page_number}...")
-            text = ocr_pdf_page(page)
+            # Fall back to OCR when there is
+            # little or no selectable text
+            if len(text) < 30:
+
+                print(
+                    f"  OCR processing page {page_number}..."
+                )
+
+                text = ocr_pdf_page(page)
+
+                if text:
+                    ocr_pages.append(page_number)
 
             if text:
-                ocr_pages.append(page_number)
+                pages.append(text)
 
-        if text:
-            pages.append(text)
-
-    document.close()
+    finally:
+        document.close()
 
     return (
         "\n\n".join(pages).strip(),
@@ -97,8 +143,11 @@ def extract_from_docx(file_path: str) -> str:
     paragraphs = []
 
     for paragraph in document.paragraphs:
+
         if paragraph.text.strip():
-            paragraphs.append(paragraph.text)
+            paragraphs.append(
+                paragraph.text
+            )
 
     return "\n".join(paragraphs).strip()
 
@@ -116,28 +165,40 @@ def extract_from_xlsx(file_path: str) -> str:
 
     sheets = []
 
-    for worksheet in workbook.worksheets:
+    try:
 
-        sheets.append(f"[Worksheet: {worksheet.title}]")
+        for worksheet in workbook.worksheets:
 
-        for row in worksheet.iter_rows(values_only=True):
+            sheets.append(
+                f"[Worksheet: {worksheet.title}]"
+            )
 
-            values = []
+            for row in worksheet.iter_rows(
+                values_only=True
+            ):
 
-            for cell in row:
-                if cell is not None:
-                    values.append(str(cell))
+                values = []
 
-            if values:
-                sheets.append("\t".join(values))
+                for cell in row:
 
-    workbook.close()
+                    if cell is not None:
+                        values.append(
+                            str(cell)
+                        )
+
+                if values:
+                    sheets.append(
+                        "\t".join(values)
+                    )
+
+    finally:
+        workbook.close()
 
     return "\n".join(sheets).strip()
 
 
 # ---------------------------------------------------------
-# Unified document extraction
+# UNIFIED DOCUMENT EXTRACTION
 # ---------------------------------------------------------
 
 def extract_text(file_path: str) -> dict:
@@ -154,49 +215,79 @@ def extract_text(file_path: str) -> dict:
     ocr_used = False
     ocr_pages = []
 
-    # ---------------------------------------------
+    # -----------------------------------------------------
     # TXT
-    # ---------------------------------------------
+    # -----------------------------------------------------
 
     if extension == ".txt":
 
-        text = extract_from_txt(file_path)
-
-    # ---------------------------------------------
-    # PDF
-    # ---------------------------------------------
-
-    elif extension == ".pdf":
-
-        text, ocr_used, ocr_pages = extract_from_pdf(
+        text = extract_from_txt(
             file_path
         )
 
-    # ---------------------------------------------
+    # -----------------------------------------------------
+    # PDF
+    # -----------------------------------------------------
+
+    elif extension == ".pdf":
+
+        (
+            text,
+            ocr_used,
+            ocr_pages,
+        ) = extract_from_pdf(
+            file_path
+        )
+
+    # -----------------------------------------------------
     # DOCX
-    # ---------------------------------------------
+    # -----------------------------------------------------
 
     elif extension == ".docx":
 
-        text = extract_from_docx(file_path)
+        text = extract_from_docx(
+            file_path
+        )
 
-    # ---------------------------------------------
+    # -----------------------------------------------------
     # XLSX
-    # ---------------------------------------------
+    # -----------------------------------------------------
 
     elif extension == ".xlsx":
 
-        text = extract_from_xlsx(file_path)
+        text = extract_from_xlsx(
+            file_path
+        )
 
-    # ---------------------------------------------
+    # -----------------------------------------------------
+    # PNG / JPG / JPEG
+    # -----------------------------------------------------
+
+    elif extension in {
+        ".png",
+        ".jpg",
+        ".jpeg",
+    }:
+
+        print("  OCR processing image...")
+
+        text = extract_from_image(
+            file_path
+        )
+
+        ocr_used = True
+
+    # -----------------------------------------------------
     # Unsupported
-    # ---------------------------------------------
+    # -----------------------------------------------------
 
     else:
 
         raise ValueError(
             f"Unsupported file type: {extension}. "
-            "Supported types: .txt, .pdf, .docx, .xlsx"
+            "Supported types: "
+            ".txt, .pdf, .docx, .xlsx, "
+            ".png, .jpg, .jpeg"
         )
 
     return {
@@ -210,7 +301,7 @@ def extract_text(file_path: str) -> dict:
 
 
 # ---------------------------------------------------------
-# Test
+# TEST
 # ---------------------------------------------------------
 
 if __name__ == "__main__":
@@ -218,26 +309,49 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
+
         print("Usage:")
         print(
-            "python -m preprocessing.document_processor <file_path>"
+            "python -m preprocessing.document_processor "
+            "<file_path>"
         )
+
         sys.exit(1)
 
     file_path = sys.argv[1]
 
-    result = extract_text(file_path)
+    result = extract_text(
+        file_path
+    )
 
-    print("\nDocument Processing Result")
+    print(
+        "\nDocument Processing Result"
+    )
     print("=" * 60)
 
-    print(f"File       : {result['file_name']}")
-    print(f"Type       : {result['file_type']}")
-    print(f"Characters : {result['character_count']}")
-    print(f"OCR Used   : {result['ocr_used']}")
-    print(f"OCR Pages  : {result['ocr_pages']}")
+    print(
+        f"File       : {result['file_name']}"
+    )
+
+    print(
+        f"Type       : {result['file_type']}"
+    )
+
+    print(
+        f"Characters : {result['character_count']}"
+    )
+
+    print(
+        f"OCR Used   : {result['ocr_used']}"
+    )
+
+    print(
+        f"OCR Pages  : {result['ocr_pages']}"
+    )
 
     print("\nExtracted Text")
     print("-" * 60)
+
     print(result["text"])
+
     print("-" * 60)

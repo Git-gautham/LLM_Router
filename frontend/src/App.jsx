@@ -3,6 +3,14 @@ import "./App.css";
 
 const API_URL = "http://127.0.0.1:8000/api/infer";
 
+const getChatTitle = (text, attachment) => {
+  const title = (text || attachment?.name || "New chat")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return title.length > 35 ? `${title.slice(0, 35).trimEnd()}…` : title;
+};
+
 const makeChat = () => ({
   id: Date.now() + Math.random(),
   title: "New chat",
@@ -280,7 +288,7 @@ function App() {
               ...chat,
               title:
                 chat.messages.length === 0
-                  ? (text || attachment?.name || "New chat").slice(0, 35)
+                  ? getChatTitle(text, attachment)
                   : chat.title,
             }
           : chat
@@ -425,7 +433,7 @@ function App() {
             title="New chat"
             onClick={createNewChat}
           >
-            ＋
+            +
           </button>
         </div>
 
@@ -496,7 +504,7 @@ function App() {
         <header className="topbar">
           <div className="topbar-title">
             <span className="mobile-brand">P</span>
-            <span>New conversation</span>
+            <span>{activeChat?.title || "New conversation"}</span>
             <span className="privacy-badge">
               <span className="status-dot" /> Privacy first
             </span>

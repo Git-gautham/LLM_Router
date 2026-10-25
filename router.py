@@ -36,8 +36,10 @@ class AdaptiveRouter:
                 f"Document content:\n{document_text}"
             )
 
+            # Scan the query and extracted document together so sensitive
+            # values in either input affect the same policy decision.
             features = generate_features(
-                text=document_text,
+                text=analysis_text,
                 file_path=file_path,
                 input_type="document",
             )

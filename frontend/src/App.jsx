@@ -514,57 +514,6 @@ function App() {
                 in mind.
               </p>
 
-              <div className="suggestion-grid">
-                <button
-                  className="suggestion-card"
-                  onClick={() =>
-                    sendMessage("Explain machine learning in simple words.")
-                  }
-                >
-                  <span className="suggestion-icon">✧</span>
-                  <span>
-                    <strong>Learn something</strong>
-                    <small>Explain a complex topic simply</small>
-                  </span>
-                </button>
-
-                <button
-                  className="suggestion-card"
-                  onClick={() =>
-                    sendMessage("Help me debug a Python program.")
-                  }
-                >
-                  <span className="suggestion-icon">{`</>`}</span>
-                  <span>
-                    <strong>Write or debug code</strong>
-                    <small>Get help with programming</small>
-                  </span>
-                </button>
-
-                <button
-                  className="suggestion-card"
-                  onClick={() =>
-                    sendMessage("Give me a step-by-step study plan.")
-                  }
-                >
-                  <span className="suggestion-icon">☷</span>
-                  <span>
-                    <strong>Plan something</strong>
-                    <small>Break a task into steps</small>
-                  </span>
-                </button>
-
-                <button
-                  className="suggestion-card"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <span className="suggestion-icon">▧</span>
-                  <span>
-                    <strong>Choose an image</strong>
-                    <small>Attach an image for analysis</small>
-                  </span>
-                </button>
-              </div>
             </div>
           ) : (
             <div className="messages">
@@ -603,47 +552,17 @@ function App() {
                         {message.selectedModel && (
                           <span>Model: {message.selectedModel}</span>
                         )}
-                        {message.route && (
-                          <span>Route: {message.route}</span>
-                        )}
                         {message.latency != null && (
-                          <span>{message.latency} ms</span>
-                        )}
-                        {message.sensitivity && (
-                          <span>
-                            Sensitivity: {message.sensitivity}
-                            {message.confidence != null
-                              ? ` (${(message.confidence * 100).toFixed(1)}%)`
-                              : ""}
-                          </span>
+                          <span>Time: {message.latency} ms</span>
                         )}
                         {message.riskScore != null && (
-                          <span>Risk: {message.riskScore}/100</span>
-                        )}
-                        {message.riskLevel && (
-                          <span>Risk level: {message.riskLevel}</span>
+                          <span>
+                            Risk: {message.riskScore}/100
+                            {message.riskLevel ? ` (${message.riskLevel})` : ""}
+                          </span>
                         )}
                         {message.policyDecision && (
                           <span>Decision: {message.policyDecision}</span>
-                        )}
-                        {message.explanation && (
-                          <div className="analysis-details">
-                            <strong>Routing reason:</strong>{" "}
-                            {message.explanation}
-                          </div>
-                        )}
-                        {message.riskReasons?.length > 0 && (
-                          <div className="analysis-details">
-                            <strong>Risk factors:</strong>
-                            <ul>
-                              {message.riskReasons.map((reason, index) => (
-                                <li key={`${index}-${reason}`}>{reason}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {message.fileName && (
-                          <div>Analyzed file: {message.fileName}</div>
                         )}
                       </div>
                     )}

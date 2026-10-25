@@ -21,8 +21,8 @@ Write-Host 'Starting PRISM backend at http://127.0.0.1:8000' -ForegroundColor Cy
 
 $frontendCommand = @"
 Set-Location '$frontendRoot'
-Write-Host 'Starting PRISM frontend at http://localhost:5173' -ForegroundColor Cyan
-& npm.cmd run dev -- --host localhost
+Write-Host 'Starting PRISM frontend at http://127.0.0.1:5173' -ForegroundColor Cyan
+& npm.cmd run dev -- --host 127.0.0.1
 "@
 
 Start-Process powershell.exe `
@@ -64,10 +64,33 @@ function Wait-ForPort {
     return $false
 }
 
+function Wait-ForHttp {
+    param (
+        [string]$Url,
+        [int]$TimeoutSeconds = 60
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+    do {
+        try {
+            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 3
+            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                return $true
+            }
+        } catch {
+        }
+
+        Start-Sleep -Milliseconds 500
+    } while ((Get-Date) -lt $deadline)
+
+    return $false
+}
+
 Write-Host "Waiting for PRISM services..." -ForegroundColor Yellow
 
-$backendReady = Wait-ForPort -HostName "127.0.0.1" -Port 8000
-$frontendReady = Wait-ForPort -HostName "127.0.0.1" -Port 5173
+$backendReady = Wait-ForHttp -Url "http://127.0.0.1:8000/api/health"
+$frontendReady = Wait-ForHttp -Url "http://127.0.0.1:5173"
 
 if (-not $backendReady) {
     Write-Warning "Backend did not become ready within 60 seconds. Check its terminal for errors."
@@ -78,7 +101,7 @@ if (-not $frontendReady) {
 }
 
 if ($backendReady -and $frontendReady) {
-    Start-Process "http://localhost:5173"
+    Start-Process "http://127.0.0.1:5173"
     Write-Host "PRISM is running. Close the backend and frontend terminals to stop it." -ForegroundColor Green
 } else {
     Write-Host "PRISM did not start completely. No browser was opened." -ForegroundColor Red

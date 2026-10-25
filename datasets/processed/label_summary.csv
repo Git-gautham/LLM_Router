@@ -1,0 +1,9 @@
+﻿source,label,count
+pii_shield,Confidential,4590
+synthetic,Confidential,3500
+enron_emails,Internal,2438
+synthetic,Internal,3500
+dolly,Public,14984
+pii_shield,Public,410
+synthetic,Public,1920
+synthetic,Secret,3500

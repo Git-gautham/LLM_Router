@@ -1,6 +1,6 @@
-# Adaptive Hybrid LLM Router
+# PRISM: Privacy-Aware LLM Router
 
-An intelligent routing layer for LLM requests that decides whether a prompt should be processed locally, sent to a cloud model, or blocked based on risk. The project combines a trained sensitivity classifier, deterministic security detectors, a risk engine, and a policy engine to minimize leakage of sensitive data.
+PRISM is an intelligent routing layer for LLM requests. It decides whether a prompt should be processed locally, sent to a cloud model simulation, or blocked based on risk. The project combines a React/Vite interface, FastAPI backend, trained sensitivity classifier, deterministic security detectors, risk engine, and policy engine to minimize sensitive-data leakage.
 
 ## Why this project exists
 
@@ -26,6 +26,11 @@ It evaluates:
   - `LOCAL` for confidential/internal or PII-heavy content
   - `CLOUD` for clearly public requests
 - Interactive command-line interface for text and document analysis
+- React/Vite chat interface with named chat history
+- Image, webcam, and document attachments
+- PDF/image OCR and TXT, DOCX, and XLSX extraction
+- Combined scanning of the user question and attached file
+- Risk and routing metadata shown for every assistant response
 - Local LLM integration through Ollama
 
 ## Project structure
@@ -54,9 +59,16 @@ LLM_Router/
 │   └── pipeline.py
 ├── risk/
 │   └── risk_engine.py         # Risk scoring logic
+├── backend/
+│   └── main.py                # FastAPI API
+├── frontend/
+│   ├── src/                   # React UI
+│   └── package.json
 ├── classifier.py              # Baseline text classifier
 ├── main.py                    # Interactive router entrypoint
 ├── router.py                  # Request routing orchestration
+├── start-prism.ps1            # Start backend and frontend on Windows
+├── stop-prism.ps1             # Stop PRISM processes on Windows
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -64,18 +76,19 @@ LLM_Router/
 
 ## How it works
 
-The router follows this flow:
+The router follows this flow for both text and file requests:
 
-1. Accepts user input and optional document file
-2. Extracts and normalizes text from the document if needed
-3. Runs deterministic detectors for PII, secrets, and code
-4. Classifies the text using the trained DistilBERT model
-5. Calculates a risk score from the sensitivity label and detected indicators
-6. Applies a policy decision:
+1. Accepts a user question and optional document or image
+2. Extracts and normalizes text from the attachment if needed
+3. Combines the user question and extracted content
+4. Runs deterministic detectors for PII, secrets, and code over the combined input
+5. Classifies the text using the trained DistilBERT model
+6. Calculates a risk score from the sensitivity label and detected indicators
+7. Applies a policy decision:
    - `BLOCK`: do not process the request
    - `LOCAL`: keep processing on-device
    - `CLOUD`: route to a cloud LLM when safe
-7. Returns the final result and response handling
+8. Returns the final result and response handling
 
 ## Setup
 
@@ -115,7 +128,7 @@ ollama pull qwen2.5:3b
 
 The local LLM gateway uses the `qwen2.5:3b` model by default via Ollama.
 
-## Running the app
+## Running the command-line app
 
 From the project root:
 
@@ -136,6 +149,64 @@ Document path: C:\path\to\employee_handbook.pdf
 ```
 
 The router will classify the content, calculate the risk, apply policy logic, and return a routing decision.
+
+## Running the PRISM web app
+
+The web app consists of:
+
+- FastAPI backend at `http://127.0.0.1:8000`
+- React/Vite frontend at `http://127.0.0.1:5173`
+
+### Windows quick start
+
+From the project root, run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\start-prism.ps1
+```
+
+The script opens separate backend and frontend terminals, waits for both services to respond, and opens the browser automatically.
+
+To stop the services and their launcher terminals:
+
+```powershell
+.\stop-prism.ps1
+```
+
+### Manual start
+
+Install frontend dependencies:
+
+```powershell
+cd frontend
+npm install
+```
+
+Start the backend from the project root:
+
+```powershell
+python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, start the frontend:
+
+```powershell
+cd frontend
+npm run dev -- --host 127.0.0.1
+```
+
+Open `http://127.0.0.1:5173`. Backend API documentation is available at `http://127.0.0.1:8000/docs`.
+
+### Supported attachments
+
+The web app accepts:
+
+- PDF, TXT, DOCX, and XLSX documents
+- PNG and JPG/JPEG images
+- Webcam photos
+
+Images and scanned PDFs use OCR when needed. The question and extracted attachment text are scanned together, so sensitive information typed in the question cannot bypass PII or secret detection.
 
 ## Training the model
 

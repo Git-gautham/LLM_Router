@@ -1,16 +1,32 @@
-# React + Vite
+# PRISM frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React/Vite chat interface for PRISM, the
+privacy-aware LLM router.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+From this directory:
 
-## React Compiler
+```powershell
+npm install
+npm run dev -- --host 127.0.0.1
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Open `http://127.0.0.1:5173`. The backend must be running at
+`http://127.0.0.1:8000`.
 
-## Expanding the ESLint configuration
+For the easiest Windows setup, run [`start-prism.ps1`](../start-prism.ps1)
+from the repository root. It starts both services and opens the browser.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Scripts
+
+```powershell
+npm run dev      # Start the development server
+npm run build    # Create a production build
+npm run lint     # Run ESLint
+npm run preview  # Preview the production build
+```
+
+The interface supports named chats, text prompts, document uploads, PNG/JPG
+images, webcam photos, OCR-backed file analysis, and displays the model,
+decision, processing time, and risk summary for each response.

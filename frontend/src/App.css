@@ -582,17 +582,26 @@ button:disabled {
   min-width: 0;
 }
 
+
+
 .composer-tool {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
   width: 33px;
   height: 33px;
   flex-shrink: 0;
-  border: 1px solid #414141;
+  border: none;
   border-radius: 50%;
   background: transparent;
   font-size: 22px;
+  box-shadow: none;
+  outline: none;
 }
+
+
 
 .composer-hint {
   color: #929292;
@@ -1114,3 +1123,52 @@ button:disabled {
     flex: 1;
   }
 }
+
+
+/* Hide the suggestion cards */
+.suggestion-grid {
+  display: none;
+}
+
+
+/* Center the welcome heading */
+.welcome {
+  padding-top: 35px;
+  padding-bottom: 20px;
+}
+
+/* Center the composer horizontally */
+.composer-area {
+  width: 100%;
+  max-width: 850px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Center the welcome content and composer on an empty chat */
+.main-panel:has(.welcome) {
+  position: relative;
+}
+
+.main-panel:has(.welcome) .conversation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-panel:has(.welcome) .welcome {
+  padding-top: 0;
+  padding-bottom: 0;
+  transform: translateY(-100px);
+}
+
+.main-panel:has(.welcome) .composer-area {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 50px);
+  max-width: 850px;
+  margin: 0;
+}
+

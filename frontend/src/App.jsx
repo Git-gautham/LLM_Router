@@ -14,6 +14,7 @@ function App() {
   const [activeChatId, setActiveChatId] = useState(null);
   const [input, setInput] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
@@ -59,6 +60,7 @@ function App() {
     setActiveChatId(chat.id);
     setInput("");
     removeImage();
+    setSelectedDocument(null);
     setAttachmentMenuOpen(false);
     inputRef.current?.focus();
   }
@@ -77,8 +79,8 @@ function App() {
 
     if (!file) return;
 
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      alert("Please choose a JPG, PNG, or WebP image.");
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      alert("Please choose a JPG or PNG image.");
       return;
     }
 
@@ -96,6 +98,7 @@ function App() {
 
       return { file, previewUrl };
     });
+    setSelectedDocument(null);
   }
 
   function chooseDocument(event) {
@@ -107,10 +110,11 @@ function App() {
     const allowedExtensions = [
       ".pdf",
       ".txt",
-      ".doc",
       ".docx",
-      ".csv",
       ".xlsx",
+      ".png",
+      ".jpg",
+      ".jpeg",
     ];
 
     const fileName = file.name.toLowerCase();
@@ -119,18 +123,18 @@ function App() {
     );
 
     if (!allowed) {
-      alert("Please choose a PDF, TXT, DOC, DOCX, CSV, or XLSX file.");
+      alert("Please choose a PDF, TXT, DOCX, XLSX, PNG, JPG, or JPEG file.");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Please choose a file smaller than 10 MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Please choose a file smaller than 15 MB.");
       return;
     }
 
-    alert(
-      `Selected file: ${file.name}. Document reading still needs backend integration.`
-    );
+    removeImage();
+    setSelectedDocument(file);
+    setAttachmentMenuOpen(false);
   }
 
   function removeImage() {
@@ -232,6 +236,7 @@ function App() {
 
           return { file: photo, previewUrl };
         });
+        setSelectedDocument(null);
 
         closeCamera();
       },
@@ -243,16 +248,21 @@ function App() {
   async function sendMessage(messageText = input) {
     const text = messageText.trim();
     const image = selectedImage;
+    const document = selectedDocument;
+    const attachment = image?.file || document;
 
-    if ((!text && !image) || loading || !activeChat) return;
+    if ((!text && !attachment) || loading || !activeChat) return;
 
     const chatId = activeChat.id;
 
     const userMessage = {
       id: Date.now(),
       role: "user",
-      content: text || "Please describe this image.",
+      content:
+        text ||
+        (image ? "Please describe this image." : "Please analyze this document."),
       imageUrl: image?.previewUrl || null,
+      fileName: document?.name || null,
     };
 
     const updatedMessages = [...activeChat.messages, userMessage];
@@ -260,7 +270,6 @@ function App() {
     updateMessages(chatId, updatedMessages);
 
     setInput("");
-    setSelectedImage(null);
     setAttachmentMenuOpen(false);
     setLoading(true);
 
@@ -271,7 +280,7 @@ function App() {
               ...chat,
               title:
                 chat.messages.length === 0
-                  ? (text || image?.file.name || "New chat").slice(0, 35)
+                  ? (text || attachment?.name || "New chat").slice(0, 35)
                   : chat.title,
             }
           : chat
@@ -281,23 +290,37 @@ function App() {
     try {
       let response;
 
-      if (image) {
-        throw new Error(
-          "Image preview works, but image analysis is not connected yet. The backend must be updated to accept images."
+      if (attachment) {
+        const formData = new FormData();
+        formData.append(
+          "question",
+          text ||
+            (image
+              ? "Please describe this image."
+              : "Please analyze this document.")
         );
+        formData.append("file", attachment);
+        response = await fetch("http://127.0.0.1:8000/api/infer-file", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text }),
+        });
       }
 
-      response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
-      });
-
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Backend error (${response.status}): ${errorText.slice(0, 250)}`
-        );
+        let message = `Backend error (${response.status})`;
+        try {
+          const errorData = await response.json();
+          message = errorData.detail || message;
+        } catch {
+          // Keep the fallback error message.
+        }
+        throw new Error(message);
       }
 
       const data = await response.json();
@@ -305,13 +328,19 @@ function App() {
       const assistantMessage = {
         id: Date.now() + 1,
         role: "assistant",
-        content: data.answer || "The backend returned no answer.",
+        content:
+          data.answer || data.response || "The backend returned no answer.",
         sensitivity: data.sensitivity,
         confidence: data.confidence,
         selectedModel: data.selected_model,
-        route: data.route,
+        route: data.route || data.decision,
         latency: data.latency_ms,
-        explanation: data.explanation,
+        explanation: data.explanation || data.reason,
+        riskScore: data.risk_score,
+        riskLevel: data.risk_level,
+        riskReasons: data.risk_reasons || [],
+        policyDecision: data.policy_decision || data.decision,
+        fileName: attachment?.name || null,
       };
 
       setChats((previous) =>
@@ -321,6 +350,12 @@ function App() {
             : chat
         )
       );
+
+      if (image?.previewUrl) {
+        URL.revokeObjectURL(image.previewUrl);
+      }
+      setSelectedImage(null);
+      setSelectedDocument(null);
     } catch (error) {
       setChats((previous) =>
         previous.map((chat) =>
@@ -423,6 +458,7 @@ function App() {
                   if (!loading) {
                     setActiveChatId(chat.id);
                     removeImage();
+                    setSelectedDocument(null);
                     setAttachmentMenuOpen(false);
                   }
                 }}
@@ -562,22 +598,55 @@ function App() {
                       {message.content}
                     </div>
 
-                    {message.role === "assistant" &&
-                      !message.isError &&
-                      message.selectedModel && (
-                        <div className="message-metadata">
-                          <span>{message.selectedModel}</span>
-                          {message.route && (
-                            <span>Route: {message.route}</span>
-                          )}
-                          {message.latency != null && (
-                            <span>{message.latency} ms</span>
-                          )}
-                          {message.sensitivity && (
-                            <span>Sensitivity: {message.sensitivity}</span>
-                          )}
-                        </div>
-                      )}
+                    {message.role === "assistant" && !message.isError && (
+                      <div className="message-metadata">
+                        {message.selectedModel && (
+                          <span>Model: {message.selectedModel}</span>
+                        )}
+                        {message.route && (
+                          <span>Route: {message.route}</span>
+                        )}
+                        {message.latency != null && (
+                          <span>{message.latency} ms</span>
+                        )}
+                        {message.sensitivity && (
+                          <span>
+                            Sensitivity: {message.sensitivity}
+                            {message.confidence != null
+                              ? ` (${(message.confidence * 100).toFixed(1)}%)`
+                              : ""}
+                          </span>
+                        )}
+                        {message.riskScore != null && (
+                          <span>Risk: {message.riskScore}/100</span>
+                        )}
+                        {message.riskLevel && (
+                          <span>Risk level: {message.riskLevel}</span>
+                        )}
+                        {message.policyDecision && (
+                          <span>Decision: {message.policyDecision}</span>
+                        )}
+                        {message.explanation && (
+                          <div className="analysis-details">
+                            <strong>Routing reason:</strong>{" "}
+                            {message.explanation}
+                          </div>
+                        )}
+                        {message.riskReasons?.length > 0 && (
+                          <div className="analysis-details">
+                            <strong>Risk factors:</strong>
+                            <ul>
+                              {message.riskReasons.map((reason, index) => (
+                                <li key={`${index}-${reason}`}>{reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {message.fileName && (
+                          <div>Analyzed file: {message.fileName}</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -600,7 +669,7 @@ function App() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg"
             hidden
             onChange={chooseImage}
           />
@@ -608,7 +677,7 @@ function App() {
           <input
             ref={documentInputRef}
             type="file"
-            accept=".pdf,.txt,.doc,.docx,.csv,.xlsx"
+            accept=".pdf,.txt,.docx,.xlsx,.png,.jpg,.jpeg"
             hidden
             onChange={chooseDocument}
           />
@@ -630,6 +699,27 @@ function App() {
                 className="remove-image-button"
                 onClick={removeImage}
                 title="Remove image"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {selectedDocument && (
+            <div className="image-preview">
+              <div className="image-preview-details">
+                <strong>{selectedDocument.name}</strong>
+                <small>
+                  {(selectedDocument.size / 1024).toFixed(0)} KB · Document
+                  selected
+                </small>
+              </div>
+
+              <button
+                type="button"
+                className="remove-image-button"
+                onClick={() => setSelectedDocument(null)}
+                title="Remove document"
               >
                 ×
               </button>
@@ -684,7 +774,7 @@ function App() {
                           <span className="attachment-option-icon">▧</span>
                           <span>
                             <strong>Upload photos</strong>
-                            <small>JPG, PNG, WebP</small>
+                            <small>JPG, PNG</small>
                           </span>
                         </button>
 
@@ -724,8 +814,10 @@ function App() {
 
                 <span className="composer-hint">
                   {selectedImage
-                    ? "Image attached · backend support pending"
-                    : "Enter to send · Shift + Enter for a new line"}
+                    ? "Image attached"
+                    : selectedDocument
+                      ? "Document attached"
+                      : "Enter to send · Shift + Enter for a new line"}
                 </span>
               </div>
 
@@ -734,7 +826,10 @@ function App() {
                 className="send-button"
                 title="Send message"
                 onClick={() => sendMessage()}
-                disabled={loading || (!input.trim() && !selectedImage)}
+                disabled={
+                  loading ||
+                  (!input.trim() && !selectedImage && !selectedDocument)
+                }
               >
                 {loading ? "…" : "↑"}
               </button>

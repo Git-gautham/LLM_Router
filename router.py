@@ -8,8 +8,8 @@ from app.local_llm import ask_local_llm
 
 class AdaptiveRouter:
 
-    def __init__(self):
-        self.classifier = SensitivityClassifier()
+    def __init__(self, model_path: str | None = None):
+        self.classifier = SensitivityClassifier(model_path=model_path) if model_path else SensitivityClassifier()
         self.risk_engine = RiskEngine()
         self.policy = PolicyEngine()
 

@@ -160,7 +160,7 @@ function App() {
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError(
-        "Camera access is unavailable. Open PRISM using http://localhost:5173 in Chrome."
+        "Camera access is unavailable. Open KAVACH using http://localhost:5173 in Chrome."
       );
       setCameraOpen(true);
       return;
@@ -231,7 +231,7 @@ function App() {
           return;
         }
 
-        const photo = new File([blob], "prism-camera-photo.jpg", {
+        const photo = new File([blob], "kavach-camera-photo.jpg", {
           type: "image/jpeg",
         });
 
@@ -424,8 +424,8 @@ function App() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="brand">
-            <div className="brand-icon">P</div>
-            <span>PRISM</span>
+            <img className="brand-icon" src="/kavach-logo.svg" alt="KAVACH logo" />
+            <span>KAVACH</span>
           </div>
 
           <button
@@ -493,17 +493,19 @@ function App() {
         <div className="sidebar-bottom">
           <div className="profile-avatar">U</div>
           <div className="profile-details">
-            <div className="profile-name">PRISM User</div>
+            <div className="profile-name">KAVACH User</div>
             <div className="profile-plan">Privacy-aware AI</div>
           </div>
           <span className="profile-menu">⋯</span>
         </div>
       </aside>
 
-      <main className="main-panel">
+      <main
+        className={`main-panel${!activeChat?.messages.length ? " empty-chat" : ""}`}
+      >
         <header className="topbar">
           <div className="topbar-title">
-            <span className="mobile-brand">P</span>
+            <img className="mobile-brand" src="/kavach-logo.svg" alt="KAVACH logo" />
             <span>{activeChat?.title || "New conversation"}</span>
             <span className="privacy-badge">
               <span className="status-dot" /> Privacy first
@@ -518,7 +520,7 @@ function App() {
               <div className="welcome-icon">✳</div>
               <h1>What can I help you with?</h1>
               <p>
-                Ask anything. PRISM helps route your requests with privacy
+                Ask anything. KAVACH helps route your requests with privacy
                 in mind.
               </p>
 
@@ -531,7 +533,7 @@ function App() {
                   className={`message-row ${message.role}`}
                 >
                   {message.role === "assistant" && (
-                    <div className="message-avatar">P</div>
+                    <img className="message-avatar" src="/kavach-logo.svg" alt="" aria-hidden="true" />
                   )}
 
                   <div className="message-content">
@@ -580,9 +582,9 @@ function App() {
 
               {loading && (
                 <div className="message-row assistant">
-                  <div className="message-avatar">P</div>
+                  <img className="message-avatar" src="/kavach-logo.svg" alt="" aria-hidden="true" />
                   <div className="message-bubble loading-bubble">
-                    PRISM is thinking…
+                    KAVACH is thinking…
                   </div>
                 </div>
               )}
@@ -659,7 +661,7 @@ function App() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Message PRISM..."
+              placeholder="Message KAVACH..."
               rows={1}
               disabled={loading}
             />
@@ -764,7 +766,7 @@ function App() {
           </div>
 
           <p className="composer-disclaimer">
-            PRISM may make mistakes. Check important information.
+            KAVACH may make mistakes. Check important information.
           </p>
         </footer>
       </main>

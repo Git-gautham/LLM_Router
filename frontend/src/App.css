@@ -861,7 +861,7 @@ button:disabled {
 }
 
 /* =========================================
-   PRISM attachment menu
+   KAVACH attachment menu
    ========================================= */
 
 .attachment-wrapper {
@@ -957,7 +957,7 @@ button:disabled {
 }
 
 /* =========================================
-   PRISM live camera popup
+   KAVACH live camera popup
    ========================================= */
 
 .camera-overlay {
@@ -1129,3 +1129,17 @@ button:disabled {
     flex: 1;
   }
 }
+.main-panel.empty-chat {
+  position: relative;
+}
+
+.main-panel.empty-chat .composer-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(850px, calc(100% - 50px));
+  max-width: none;
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+

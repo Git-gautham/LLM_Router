@@ -1,6 +1,6 @@
-# PRISM: Privacy-Aware LLM Router
+# KAVACH: Privacy-Aware LLM Router
 
-PRISM is an intelligent routing layer for LLM requests. It decides whether a prompt should be processed locally, sent to a cloud model simulation, or blocked based on risk. The project combines a React/Vite interface, FastAPI backend, trained sensitivity classifier, deterministic security detectors, risk engine, and policy engine to minimize sensitive-data leakage.
+KAVACH is an intelligent routing layer for LLM requests. It decides whether a prompt should be processed locally, sent to a cloud model simulation, or blocked based on risk. The project combines a React/Vite interface, FastAPI backend, trained sensitivity classifier, deterministic security detectors, risk engine, and policy engine to minimize sensitive-data leakage.
 
 ## Why this project exists
 
@@ -67,8 +67,8 @@ LLM_Router/
 ├── classifier.py              # Baseline text classifier
 ├── main.py                    # Interactive router entrypoint
 ├── router.py                  # Request routing orchestration
-├── start-prism.ps1            # Start backend and frontend on Windows
-├── stop-prism.ps1             # Stop PRISM processes on Windows
+├── start-kavach.ps1           # Start backend and frontend on Windows
+├── stop-kavach.ps1            # Stop KAVACH processes on Windows
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -150,7 +150,7 @@ Document path: C:\path\to\employee_handbook.pdf
 
 The router will classify the content, calculate the risk, apply policy logic, and return a routing decision.
 
-## Running the PRISM web app
+## Running the KAVACH web app
 
 The web app consists of:
 
@@ -163,7 +163,7 @@ From the project root, run:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\start-prism.ps1
+.\start-kavach.ps1
 ```
 
 The script opens separate backend and frontend terminals, waits for both services to respond, and opens the browser automatically.
@@ -171,7 +171,7 @@ The script opens separate backend and frontend terminals, waits for both service
 To stop the services and their launcher terminals:
 
 ```powershell
-.\stop-prism.ps1
+.\stop-kavach.ps1
 ```
 
 ### Manual start

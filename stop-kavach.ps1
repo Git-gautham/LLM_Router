@@ -55,7 +55,7 @@ foreach ($candidate in $candidates) {
 }
 
 if ($targets.Count -eq 0) {
-    Write-Host "No PRISM processes were found." -ForegroundColor Yellow
+    Write-Host "No KAVACH processes were found." -ForegroundColor Yellow
     exit 0
 }
 
@@ -71,4 +71,4 @@ foreach ($processId in $processIds) {
     }
 }
 
-Write-Host "PRISM backend, frontend, and their launcher terminals have been stopped." -ForegroundColor Green
+Write-Host "KAVACH backend, frontend, and their launcher terminals have been stopped." -ForegroundColor Green

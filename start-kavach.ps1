@@ -15,13 +15,13 @@ if (-not (Test-Path $frontendPackage)) {
 
 $backendCommand = @"
 Set-Location '$projectRoot'
-Write-Host 'Starting PRISM backend at http://127.0.0.1:8000' -ForegroundColor Cyan
+Write-Host 'Starting KAVACH backend at http://127.0.0.1:8000' -ForegroundColor Cyan
 & '$python' -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 "@
 
 $frontendCommand = @"
 Set-Location '$frontendRoot'
-Write-Host 'Starting PRISM frontend at http://127.0.0.1:5173' -ForegroundColor Cyan
+Write-Host 'Starting KAVACH frontend at http://127.0.0.1:5173' -ForegroundColor Cyan
 & npm.cmd run dev -- --host 127.0.0.1
 "@
 
@@ -87,7 +87,7 @@ function Wait-ForHttp {
     return $false
 }
 
-Write-Host "Waiting for PRISM services..." -ForegroundColor Yellow
+Write-Host "Waiting for KAVACH services..." -ForegroundColor Yellow
 
 $backendReady = Wait-ForHttp -Url "http://127.0.0.1:8000/api/health"
 $frontendReady = Wait-ForHttp -Url "http://127.0.0.1:5173"
@@ -102,7 +102,7 @@ if (-not $frontendReady) {
 
 if ($backendReady -and $frontendReady) {
     Start-Process "http://127.0.0.1:5173"
-    Write-Host "PRISM is running. Close the backend and frontend terminals to stop it." -ForegroundColor Green
+    Write-Host "KAVACH is running. Close the backend and frontend terminals to stop it." -ForegroundColor Green
 } else {
-    Write-Host "PRISM did not start completely. No browser was opened." -ForegroundColor Red
+    Write-Host "KAVACH did not start completely. No browser was opened." -ForegroundColor Red
 }

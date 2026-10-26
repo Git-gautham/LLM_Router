@@ -14,7 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from router import AdaptiveRouter
 
-app = FastAPI(title="PRISM API", version="1.0.0")
+app = FastAPI(title="KAVACH API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -97,7 +97,7 @@ def route_request(question: str, file_path: str | None = None) -> dict:
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "PRISM API"}
+    return {"status": "ok", "service": "KAVACH API"}
 
 
 @app.post("/api/infer")
@@ -111,10 +111,10 @@ def infer(request: InferenceRequest):
     except Exception as exc:
         # Log details on the backend; don't expose internal errors
         # or file paths to the frontend.
-        print(f"PRISM inference error: {type(exc).__name__}: {exc}")
+        print(f"KAVACH inference error: {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=500,
-            detail="PRISM could not process this message. "
+            detail="KAVACH could not process this message. "
                    "Check the backend logs and local model services.",
         ) from exc
 
@@ -144,10 +144,10 @@ async def infer_file(
             raise HTTPException(status_code=400, detail="Enter a message.")
         return route_request(cleaned_question, temporary_path)
     except Exception as exc:
-        print(f"PRISM file inference error: {type(exc).__name__}: {exc}")
+        print(f"KAVACH file inference error: {type(exc).__name__}: {exc}")
         raise HTTPException(
             status_code=500,
-            detail="PRISM could not process this file. Check the backend logs.",
+            detail="KAVACH could not process this file. Check the backend logs.",
         ) from exc
     finally:
         if temporary_path:

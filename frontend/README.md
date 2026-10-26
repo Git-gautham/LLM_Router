@@ -1,6 +1,6 @@
-# PRISM frontend
+# KAVACH frontend
 
-This directory contains the React/Vite chat interface for PRISM, the
+This directory contains the React/Vite chat interface for KAVACH, the
 privacy-aware LLM router.
 
 ## Development
@@ -15,7 +15,7 @@ npm run dev -- --host 127.0.0.1
 Open `http://127.0.0.1:5173`. The backend must be running at
 `http://127.0.0.1:8000`.
 
-For the easiest Windows setup, run [`start-prism.ps1`](../start-prism.ps1)
+For the easiest Windows setup, run [`start-kavach.ps1`](../start-kavach.ps1)
 from the repository root. It starts both services and opens the browser.
 
 ## Scripts

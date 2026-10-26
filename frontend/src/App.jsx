@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import "./App.css";
 
 const API_URL = "http://127.0.0.1:8000/api/infer";
@@ -664,7 +665,13 @@ function App() {
                         message.isError ? "error-bubble" : ""
                       }`}
                     >
-                      {message.content}
+                      {message.role === "assistant" && !message.isError ? (
+                        <div className="assistant-markdown">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        message.content
+                      )}
                     </div>
 
                     {message.role === "assistant" && !message.isError && (

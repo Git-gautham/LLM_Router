@@ -4,6 +4,7 @@ from preprocessing.document_processor import extract_text
 from policy.policy_engine import PolicyEngine
 from risk.risk_engine import RiskEngine
 from app.local_llm import ask_local_llm
+from app.cloud_llm import ask_cloud_llm
 
 
 class AdaptiveRouter:
@@ -17,6 +18,7 @@ class AdaptiveRouter:
         self,
         text: str,
         file_path: str | None = None,
+        allow_cloud: bool = False,
     ) -> dict:
 
         # --------------------------------------------------
@@ -119,12 +121,18 @@ class AdaptiveRouter:
 
         elif decision["decision"] == "CLOUD":
 
-            # Cloud integration will be added later.
-            result["response"] = (
-                "[CLOUD LLM SIMULATION] "
-                "This request would be sent to the "
-                "configured cloud LLM."
-            )
+            if allow_cloud:
+                result["response"], result["cloud_model"] = ask_cloud_llm(
+                    analysis_text
+                )
+                result["cloud_used"] = True
+            else:
+                result["response"] = (
+                    "This request was classified as safe for cloud processing. "
+                    "Select Proceed to cloud to send it."
+                )
+                result["cloud_used"] = False
+                result["cloud_pending"] = True
 
         elif decision["decision"] == "BLOCK":
 

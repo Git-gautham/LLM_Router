@@ -31,6 +31,7 @@ It evaluates:
 - PDF/image OCR and TXT, DOCX, and XLSX extraction
 - Combined scanning of the user question and attached file
 - Risk and routing metadata shown for every assistant response
+- Explicit user confirmation before any cloud request
 - Local LLM integration through Ollama
 
 ## Project structure
@@ -207,6 +208,32 @@ The web app accepts:
 - Webcam photos
 
 Images and scanned PDFs use OCR when needed. The question and extracted attachment text are scanned together, so sensitive information typed in the question cannot bypass PII or secret detection.
+
+### Optional cloud routing
+
+Public, low-risk prompts may be classified as `CLOUD`. PRISM never sends them
+to a cloud provider automatically. The response first shows a **Proceed to
+cloud** button. Only after the user selects it does the backend make a cloud
+request.
+
+The initial adapter uses OpenRouter's OpenAI-compatible API. Configure it in
+the backend terminal before starting PRISM:
+
+```powershell
+$env:OPENROUTER_API_KEY = "your-key"
+$env:OPENROUTER_MODEL = "liquid/lfm-2.5-2.6b:free"
+$env:OPENROUTER_FALLBACK_MODELS = "google/gemma-4-26b-a4b-it:free,nvidia/nemotron-3.5-lightning:free"
+.\start-prism.ps1
+```
+
+Do not commit the API key. The model name can be changed without a code
+change. Free availability and rate limits vary by provider and can change, so
+verify the current limits before relying on a free tier.
+
+Other providers worth considering are Google's Gemini API free tier, Groq's
+developer free tier, and Hugging Face Inference Providers. Each requires its
+own API key, quotas, and adapter; OpenRouter is the provider currently wired
+into PRISM.
 
 ## Training the model
 

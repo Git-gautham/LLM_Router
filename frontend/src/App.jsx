@@ -349,6 +349,16 @@ function App() {
         riskReasons: data.risk_reasons || [],
         policyDecision: data.policy_decision || data.decision,
         fileName: attachment?.name || null,
+        pendingCloud: data.cloud_pending === true,
+        pendingQuestion:
+          data.cloud_pending === true
+            ? text ||
+              (image
+                ? "Please describe this image."
+                : "Please analyze this document.")
+            : null,
+        pendingAttachment:
+          data.cloud_pending === true ? attachment || null : null,
       };
 
       setChats((previous) =>
@@ -359,11 +369,13 @@ function App() {
         )
       );
 
-      if (image?.previewUrl) {
-        URL.revokeObjectURL(image.previewUrl);
+      if (!assistantMessage.pendingCloud) {
+        if (image?.previewUrl) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+        setSelectedImage(null);
+        setSelectedDocument(null);
       }
-      setSelectedImage(null);
-      setSelectedDocument(null);
     } catch (error) {
       setChats((previous) =>
         previous.map((chat) =>
@@ -379,6 +391,104 @@ function App() {
                     isError: true,
                   },
                 ],
+              }
+            : chat
+        )
+      );
+    } finally {
+      setLoading(false);
+      inputRef.current?.focus();
+    }
+  }
+
+  async function proceedToCloud(message) {
+    if (loading || !activeChat || !message.pendingCloud) return;
+
+    setLoading(true);
+    try {
+      let response;
+      const attachment = message.pendingAttachment;
+
+      if (attachment) {
+        const formData = new FormData();
+        formData.append("question", message.pendingQuestion);
+        formData.append("file", attachment);
+        response = await fetch("http://127.0.0.1:8000/api/cloud-infer-file", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        response = await fetch("http://127.0.0.1:8000/api/cloud-infer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: message.pendingQuestion }),
+        });
+      }
+
+      if (!response.ok) {
+        let detail = `Cloud request failed (${response.status})`;
+        try {
+          const errorData = await response.json();
+          detail = errorData.detail || detail;
+        } catch {
+          // Keep the fallback error.
+        }
+        throw new Error(detail);
+      }
+
+      const data = await response.json();
+      setChats((previous) =>
+        previous.map((chat) =>
+          chat.id === activeChat.id
+            ? {
+                ...chat,
+                messages: chat.messages.map((item) =>
+                  item.id === message.id
+                    ? {
+                        ...item,
+                        content:
+                          data.answer ||
+                          data.response ||
+                          "The cloud provider returned no answer.",
+                        selectedModel: data.selected_model,
+                        route: data.route || data.decision,
+                        latency: data.latency_ms,
+                        riskScore: data.risk_score,
+                        riskLevel: data.risk_level,
+                        policyDecision:
+                          data.policy_decision || data.decision,
+                        pendingCloud: false,
+                        pendingQuestion: null,
+                        pendingAttachment: null,
+                      }
+                    : item
+                ),
+              }
+            : chat
+        )
+      );
+
+      if (selectedImage?.previewUrl) {
+        URL.revokeObjectURL(selectedImage.previewUrl);
+      }
+      setSelectedImage(null);
+      setSelectedDocument(null);
+    } catch (error) {
+      setChats((previous) =>
+        previous.map((chat) =>
+          chat.id === activeChat.id
+            ? {
+                ...chat,
+                messages: chat.messages.map((item) =>
+                  item.id === message.id
+                    ? {
+                        ...item,
+                        content: `Cloud request failed: ${error.message}`,
+                        isError: true,
+                        pendingCloud: false,
+                      }
+                    : item
+                ),
               }
             : chat
         )
@@ -573,6 +683,16 @@ function App() {
                         )}
                         {message.policyDecision && (
                           <span>Decision: {message.policyDecision}</span>
+                        )}
+                        {message.pendingCloud && (
+                          <button
+                            type="button"
+                            className="proceed-cloud-button"
+                            onClick={() => proceedToCloud(message)}
+                            disabled={loading}
+                          >
+                            Proceed to cloud
+                          </button>
                         )}
                       </div>
                     )}

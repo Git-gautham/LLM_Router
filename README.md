@@ -31,6 +31,8 @@ It evaluates:
 - PDF/image OCR and TXT, DOCX, and XLSX extraction
 - Combined scanning of the user question and attached file
 - Risk and routing metadata shown for every assistant response
+- Markdown-rendered assistant responses with headings, lists, tables, links,
+  inline code, and code blocks
 - Explicit user confirmation before any cloud request
 - Local LLM integration through Ollama
 
@@ -64,7 +66,8 @@ LLM_Router/
 │   └── main.py                # FastAPI API
 ├── frontend/
 │   ├── src/                   # React UI
-│   └── package.json
+│   ├── package.json           # Frontend dependencies and scripts
+│   └── package-lock.json
 ├── classifier.py              # Baseline text classifier
 ├── main.py                    # Interactive router entrypoint
 ├── router.py                  # Request routing orchestration
@@ -198,6 +201,10 @@ npm run dev -- --host 127.0.0.1
 ```
 
 Open `http://127.0.0.1:5173`. Backend API documentation is available at `http://127.0.0.1:8000/docs`.
+
+Assistant responses are rendered as Markdown in the web interface, so
+structured answers such as tables, numbered steps, emphasis, links, and code
+examples display as formatted content instead of raw Markdown syntax.
 
 ### Supported attachments
 
